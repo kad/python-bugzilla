@@ -1,0 +1,11 @@
+Source: python-bugzilla
+Priority: optional
+Section: devel
+Maintainer: Alexandr D. Kanevskiy <packages@bifh.org>
+Build-Depends-Indep: debhelper (>= 4.1.25), python2.3
+Standards-Version: 3.6.1
+
+Package: python-bugzilla
+Architecture: all
+Depends: ${python:Depends}, python-celementtree, python2.3-pycurl
+Description: Small python library of classes, for access Bugzilla
