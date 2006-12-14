@@ -1,3 +1,13 @@
+python-bugzilla (0.6) unstable; urgency=low
+
+  * fetch_bug_xml() now have optional parameter for encoding if not returned
+    by bugzilla
+  * update_bugs() - new function to make mass modification on bugs
+  * parse_bug_xml() now converts unprintable characters to '?' by default
+  * minor pylint warnings cleanup
+
+ -- Alexander Kanevskiy <packages@bifh.org>  Thu, 14 Dec 2006 16:42:23 +0200
+
 python-bugzilla (0.5) unstable; urgency=low
 
   * New functionality: fetch_bug_activity()

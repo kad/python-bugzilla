@@ -14,6 +14,7 @@ import os
 import csv
 import types
 import re
+import string
 
 class BugzillaSession:
     """ Handy class to access bugzilla """
@@ -50,7 +51,7 @@ class BugzillaSession:
         """Enables proxy support"""
         self._curl.setopt(pycurl.PROXY, proxy_url)
 
-    def fetch_bug_xml(self, bugid):
+    def fetch_bug_xml(self, bugid, xml_def_encoding = 'iso-8859-1'):
         """Fetch bug xml data from server or from cache, if enabled"""
         if self._bug_cache is not None:
             if self._bug_cache.has_key(str(bugid)):
@@ -72,15 +73,25 @@ class BugzillaSession:
             if result.find(' encoding="', 0, 100) < 0:
                 # Hack for broken bugzilla xml output
                 result = result.replace('<?xml version="1.0" standalone="yes"?>', \
-                                '<?xml version="1.0" encoding="iso-8859-1" standalone="yes"?>')
+                                '<?xml version="1.0" encoding="%s" standalone="yes"?>' % xml_def_encoding)
             if self._bug_cache is not None:
                 self._bug_cache[str(bugid)] = result
             return result
 
     def comment_bugs(self, bugs, comment):
         """Put comment on bugs"""
-        reqdict = { 'comment': comment.strip(),
-                    'dontchange': 'dont_change',
+        __comment = comment.strip()
+        if not __comment:
+            return "Comment must not be empty"
+        else:
+            return self.update_bugs(bugs, {'comment': __comment})
+
+    def update_bugs(self, bugs, params = None):
+        """
+            Group update operation for bugs.
+            params should be non-empty dictionary with valid bugzilla update form fields
+        """
+        reqdict = { 'dontchange': 'dont_change',
                     'product': 'dont_change',
                     'version': 'dont_change',
                     'component': 'dont_change',
@@ -96,6 +107,10 @@ class BugzillaSession:
                     'keywords': '',
                     'keywordaction': 'add',
                     'knob': 'none' }
+        if type(params) == types.DictType and params:
+            reqdict.update(params)
+        else:
+            return "Not valid params dictionary"
         if self._login_dict:
             reqdict.update(self._login_dict)
         for bug in bugs:
@@ -139,7 +154,7 @@ class BugzillaSession:
             reqdict.update(self._login_dict)
         if type(params) == types.ListType:
             # List of bugs
-            reqdict['bug_id'] = ",".join(map(lambda x: str(x), params))
+            reqdict['bug_id'] = ",".join([str(bug) for bug in params])
         elif type(params) == types.StringType:
             # String ? Hmm, assume as list of bugs separated by ','
             reqdict['bug_id'] = params
@@ -169,10 +184,17 @@ class BugzillaSession:
         """ Return small info about bugs """
         return self.parse_bug_csv(self.fetch_buglist_csv(params))
 
-    def parse_bug_xml(self, bug_xml):
-        """ Parses bug xml and returns ElementTree obj """
+    def parse_bug_xml(self, bug_xml, convert_unprintable=True):
+        """ 
+            Parses bug xml and returns ElementTree obj
+            If convert_unprintable is True (default), it converts all unprintable
+            characters to '?'. Otherwise tries to parse bug_xml as is.
+        """
         try:
-            tree =  ElementTree.fromstring(bug_xml)
+            if convert_unprintable:
+                tree = ElementTree.fromstring("".join([sym in string.printable and sym or "?" for sym in bug_xml]))
+            else:
+                tree =  ElementTree.fromstring(bug_xml)
         except SyntaxError, ex: 
             raise SyntaxError, "Error parsing bug xml: %s" % ex
         
@@ -200,7 +222,7 @@ class BugzillaSession:
     def showbug_url(self, bug):
         """ Returns link to showbug.cgi, with a parameter of bug """
         if type(bug) == types.ListType:
-            return map(self.showbug_url, bug)
+            return [self.showbug_url(obg) for obg in bug]
         else:
             return os.path.join(self._baseurl, "show_bug.cgi?id=%s" % urllib.quote(str(bug)))
 
@@ -223,7 +245,7 @@ class BugzillaSession:
             return ""
         else:
             result = _result.getvalue()
-            match=re.search(r"(?P<act><table.+</table>)", result, re.M+re.DOTALL)
+            match = re.search(r"(?P<act><table.+</table>)", result, re.M+re.DOTALL)
             if not match:
                 return ""
             result = match.group("act")
@@ -251,27 +273,27 @@ class BugzillaSession:
         if trs[0][0].text == "Who":
             # First row is a table header. Skip it
             trs = trs[1:]
-        for tr in trs:
-            if len(tr) == 5:
+        for trw in trs:
+            if len(trw) == 5:
                 actdict = {
-                    'who':     tr[0].text.strip(),
-                    'when':    tr[1].text.strip(),
-                    'what':    tr[2].text.strip(),
-                    'removed': tr[3].text.strip(),
-                    'added':   tr[4].text.strip()
+                    'who':     trw[0].text.strip(),
+                    'when':    trw[1].text.strip(),
+                    'what':    trw[2].text.strip(),
+                    'removed': trw[3].text.strip(),
+                    'added':   trw[4].text.strip()
                     }
                 activity.append(actdict)
-            elif len(tr) == 3:
+            elif len(trw) == 3:
                 # line continues for previos action
                 actdict = {
                     'who':     activity[-1]['who'],
                     'when':    activity[-1]['when'],
-                    'what':    tr[0].text.strip(),
-                    'removed': tr[1].text.strip(),
-                    'added':   tr[2].text.strip()
+                    'what':    trw[0].text.strip(),
+                    'removed': trw[1].text.strip(),
+                    'added':   trw[2].text.strip()
                     }
                 activity.append(actdict)
             else:
-                raise SyntaxError, "Error parsing bug activity. Unknown dataline len: %d" % len(tr)
+                raise SyntaxError, "Error parsing bug activity. Unknown dataline len: %d" % len(trw)
         return activity       
 
