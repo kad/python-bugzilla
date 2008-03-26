@@ -1,6 +1,8 @@
 python-bugzilla (0.9) unstable; urgency=low
 
   * Bugzilla 3.0.x: Don't fetch attachment data by default in fetch_bug_xml
+  * Use isinstance() instead of type()
+  * update_bugs now understands single bug id, list or tuples of bugs
 
  -- Alexandr D. Kanevskiy <packages@bifh.org>  Tue, 25 Mar 2008 22:43:50 +0200
 

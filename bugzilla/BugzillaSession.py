@@ -132,7 +132,7 @@ class BugzillaSession:
         self._password = None
         self._login_dict = None
         if use_cache:
-            if type(use_cache) == types.DictType:
+            if isinstance(use_cache, types.DictType):
                 self._bug_cache = use_cache
             else:
                 self._bug_cache = {}
@@ -198,6 +198,10 @@ class BugzillaSession:
     def update_bugs(self, bugs, params = None):
         """
             Group update operation for bugs.
+            Possible bugs specifications:
+                 id -- single bug id (integer)
+                 [id,id,id] or (id,id,id) -- List of bug IDs
+                 "id,id,id" -- List of bugs, alternative way (string)
             params should be non-empty dictionary with valid bugzilla update form fields
         """
         reqdict = { 'dontchange': 'dont_change',
@@ -217,14 +221,24 @@ class BugzillaSession:
                     'keywords': '',
                     'keywordaction': 'add',
                     'knob': 'none' }
-        if type(params) == types.DictType and params:
+        if isinstance(params, types.DictType) and params:
             reqdict.update(params)
         else:
             return "Not valid params dictionary"
         if self._login_dict:
             reqdict.update(self._login_dict)
-        for bug in bugs:
-            reqdict['id_' + bug] = bug
+
+        if isinstance(bugs, (types.ListType, types.TupleType)):
+            # List of bugs
+            lbugs = bugs
+        elif isinstance(bugs, types.StringType):
+            # String ? Hmm, assume as list of bugs separated by ','
+            lbugs = re.split("\s*,\s*", bugs)
+        elif isinstance(params, types.IntType):
+            # Just one bug id
+            lbugs = [ str(bugs) ]
+        for bug in lbugs:
+            reqdict['id_' + str(bug)] = str(bug)
         _result = StringIO.StringIO()
         self._curl.setopt(pycurl.URL, os.path.join(self._baseurl, "process_bug.cgi"))
         self._curl.setopt(pycurl.POST, 1)
@@ -253,7 +267,8 @@ class BugzillaSession:
         """ 
             Fetches csv from buglist.cgi.
                 Possible parameters:
-                    [id,id,id] -- List of bug IDs
+                    id -- single bug id (integer)
+                    [id,id,id] or (id,id,id) -- List of bug IDs
                     "id,id,id" -- List of bugs, alternative way (string)
                     {'bugzilla_internal_param1': 'value',...} -- advanced parameters to request
         """
@@ -262,13 +277,16 @@ class BugzillaSession:
                     'columnlist': 'all'}
         if self._login_dict:
             reqdict.update(self._login_dict)
-        if type(params) == types.ListType:
+        if isinstance(params, (types.ListType, types.TupleType)):
             # List of bugs
             reqdict['bug_id'] = ",".join([str(bug) for bug in params])
-        elif type(params) == types.StringType:
+        elif isinstance(params, types.StringType):
             # String ? Hmm, assume as list of bugs separated by ','
             reqdict['bug_id'] = params
-        elif type(params) == types.DictType:
+        elif isinstance(params, types.IntType):
+            # Just one bug id
+            reqdict['bug_id'] = str(params)
+        elif isinstance(params, types.DictType):
             # Some advanced query
             reqdict.update(params)
         else:
@@ -296,7 +314,7 @@ class BugzillaSession:
 
     def showbug_url(self, bug):
         """ Returns link to showbug.cgi, with a parameter of bug """
-        if type(bug) == types.ListType:
+        if isinstance(bug, (types.ListType, types.TupleType)):
             return [self.showbug_url(obg) for obg in bug]
         else:
             return os.path.join(self._baseurl, "show_bug.cgi?id=%s" % urllib.quote(str(bug)))
