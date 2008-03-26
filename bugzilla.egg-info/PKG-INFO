@@ -1,0 +1,17 @@
+Metadata-Version: 1.0
+Name: bugzilla
+Version: 0.8
+Summary: Access to Bugzilla
+Home-page: http://bifh.org/wiki/python-bugzilla
+Author: Alexandr D. Kanevskiy
+Author-email: packages@bifh.org
+License: GPL
+Description: Python library for accessing information in Bugzilla
+Keywords: python bugzilla
+Platform: Python 2.3 and later.
+Classifier: Development Status :: 4 - Beta
+Classifier: Operating System :: Unix
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

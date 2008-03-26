@@ -1,0 +1,15 @@
+AUTHORS
+README
+setup.py
+bugzilla/BugzillaSession.py
+bugzilla/__init__.py
+bugzilla.egg-info/PKG-INFO
+bugzilla.egg-info/SOURCES.txt
+bugzilla.egg-info/dependency_links.txt
+bugzilla.egg-info/top_level.txt
+debian/changelog
+debian/compat
+debian/control
+debian/copyright
+debian/docs
+debian/rules

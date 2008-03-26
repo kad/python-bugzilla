@@ -1,3 +1,21 @@
+python-bugzilla (0.9) unstable; urgency=low
+
+  * Bugzilla 3.0.x: Don't fetch attachment data by default in fetch_bug_xml
+
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Tue, 25 Mar 2008 22:43:50 +0200
+
+python-bugzilla (0.8) unstable; urgency=low
+
+  * Use pycentral and setuptools
+
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Mon, 25 Jun 2007 21:10:51 +0300
+
+python-bugzilla (0.7) unstable; urgency=low
+
+  * new field for mass update form: 'featdev'
+
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Mon, 25 Jun 2007 19:46:26 +0300
+
 python-bugzilla (0.6) unstable; urgency=low
 
   * fetch_bug_xml() now have optional parameter for encoding if not returned
@@ -12,30 +30,30 @@ python-bugzilla (0.5) unstable; urgency=low
 
   * New functionality: fetch_bug_activity()
 
- -- Alexandr Kanevskiy <packages@bifh.org>  Sun,  9 Apr 2006 01:20:18 +0300
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Sun,  9 Apr 2006 01:20:18 +0300
 
 python-bugzilla (0.4) unstable; urgency=low
 
   * New functionality: showbug_url()
 
- -- Alexandr Kanevskiy <packages@bifh.org>  Sat,  1 Apr 2006 19:33:59 +0300
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Sat,  1 Apr 2006 19:33:59 +0300
 
 python-bugzilla (0.3) unstable; urgency=low
 
   * Extend fetch_buglist_info and fetch_buglist_csv to take advanced query
     parameters
 
- -- Alexandr Kanevskiy <packages@bifh.org>  Fri, 31 Mar 2006 00:01:12 +0300
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Fri, 31 Mar 2006 00:01:12 +0300
 
 python-bugzilla (0.2) unstable; urgency=low
 
   * Support for proxy settings
 
- -- Alexandr Kanevskiy <packages@bifh.org>  Wed, 15 Mar 2006 09:45:25 +0200
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Wed, 15 Mar 2006 09:45:25 +0200
 
 python-bugzilla (0.1) unstable; urgency=low
 
   * Initial packaging
 
- -- Alexandr Kanevskiy <packages@bifh.org>  Fri, 11 Nov 2005 9:50:08 +0200
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Fri, 11 Nov 2005 9:50:08 +0200
 

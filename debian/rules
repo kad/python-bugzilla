@@ -4,11 +4,9 @@
 # This file is public domain software, originally written by Joey Hess.
 
 build:
+	python setup.py build
 
-bugzilla/version.py: debian/changelog
-	echo "pkg_version = \"`dpkg-parsechangelog | awk '/^Version:/ { print $$2 }'`\"" > bugzilla/version.py
-
-clean: bugzilla/version.py
+clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
@@ -19,7 +17,7 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
-	$(MAKE) install DESTDIR=debian/python-bugzilla
+	python setup.py install --skip-build --root debian/python-bugzilla
 
 # Build architecture-independent files here.
 binary-indep: build install
@@ -31,7 +29,7 @@ binary-indep: build install
 	dh_link
 	dh_compress
 	dh_fixperms
-	dh_python
+	dh_pycentral
 	dh_installdeb
 	dh_gencontrol
 	dh_md5sums

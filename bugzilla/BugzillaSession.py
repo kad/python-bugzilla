@@ -1,10 +1,34 @@
-"""
-Class for access Bugzilla over the network
-"""
-
+#!/usr/bin/python -tt
+# -*- coding: UTF-8 -*-
+# vim: sw=4 ts=4 expandtab ai
+#
+# BugzillaSession - handy class to access Bugzilla without XML-RPC 
+#
+# Copyright (C) 2005-2008 Alexandr D. Kanevskiy
+#
+# Contact: Alexandr D. Kanevskiy <packages@bifh.org>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# version 2 as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+# 02110-1301 USA
+#
 # $Id$
 
+"""BugzillaSession - Class for access Bugzilla over the network. 
+It uses GET/POST interfaces compatible with older Bugzilla 2.x, which doesn't have XML-RPC."""
+
 __revision__ = "r"+"$Revision$"[11:-2]
+__all__ = ( 'BugzillaSession', ) 
 
 import pycurl
 import urllib
@@ -14,13 +38,94 @@ import os
 import csv
 import types
 import re
-import string
+
+
+def _parse_bug_csv(csv_string):
+    """ Parses csv and returns array of dictionaries """
+    reader = csv.reader(csv_string.splitlines())
+    items = []
+    for item in reader:
+        items.append(item)
+    bug_list = []
+    for item in items[1:]:
+        tempo = {}
+        for (col, coln) in enumerate(items[0]):
+            if coln == '':
+                continue
+            tempo[coln] = item[col]
+        bug_list.append(tempo)
+    return bug_list
+
+def _parse_bug_xml(bug_xml, convert_unprintable=True):
+    """ 
+        Parses bug xml and returns ElementTree obj
+        If convert_unprintable is True (default), it converts all unprintable
+        characters to '?'. Otherwise tries to parse bug_xml as is.
+    """
+    try:
+        if convert_unprintable:
+            import string
+            tree = ElementTree.fromstring("".join([sym in string.printable and sym or "?" for sym in bug_xml]))
+        else:
+            tree =  ElementTree.fromstring(bug_xml)
+    except SyntaxError, ex: 
+        raise SyntaxError, "Error parsing bug xml: %s" % ex
+    
+    bug = tree.find("bug")
+    if bug.get('error'):
+        raise KeyError, "Invalid bug: %s" % bug.get('error') 
+    return tree 
+
+def _parse_bug_activity(ba_string):
+    """Parses activities from bugzilla bug activity html page"""
+    if not ba_string.startswith("<table"):
+        # We don't know  how to deal with unknown data
+        return None
+    try:
+        tree =  ElementTree.fromstring(ba_string)
+    except SyntaxError, ex: 
+        raise SyntaxError, "Error parsing bug activity: %s" % ex
+    activity = []
+    trs = tree.findall("tr")
+    if len(trs) < 2:
+        # Strange input. 
+        return []
+    if trs[0][0].text == "Who":
+        # First row is a table header. Skip it
+        trs = trs[1:]
+    for trw in trs:
+        if len(trw) == 5:
+            actdict = {
+                'who':     trw[0].text.strip(),
+                'when':    trw[1].text.strip(),
+                'what':    trw[2].text.strip(),
+                'removed': trw[3].text.strip(),
+                'added':   trw[4].text.strip()
+                }
+            activity.append(actdict)
+        elif len(trw) == 3:
+            # line continues for previos action
+            actdict = {
+                'who':     activity[-1]['who'],
+                'when':    activity[-1]['when'],
+                'what':    trw[0].text.strip(),
+                'removed': trw[1].text.strip(),
+                'added':   trw[2].text.strip()
+                }
+            activity.append(actdict)
+        else:
+            raise SyntaxError, "Error parsing bug activity. Unknown dataline len: %d" % len(trw)
+    return activity       
+
 
 class BugzillaSession:
-    """ Handy class to access bugzilla """
+    """ 
+       Class for access Bugzilla over the network. 
+       It uses GET/POST interfaces compatible with older Bugzilla 2.x,
+       which doesn't have XML-RPC.
+    """
     def __init__(self, baseurl, use_cache=True):
         self._curl = pycurl.Curl()
-        #self._curl.setopt(pycurl.URL, baseurl)
         self._curl.setopt(pycurl.VERBOSE, False)
         self._curl.setopt(pycurl.SSL_VERIFYPEER, False)
         self._name = None
@@ -51,7 +156,7 @@ class BugzillaSession:
         """Enables proxy support"""
         self._curl.setopt(pycurl.PROXY, proxy_url)
 
-    def fetch_bug_xml(self, bugid, xml_def_encoding = 'iso-8859-1'):
+    def fetch_bug_xml(self, bugid, xml_def_encoding = 'iso-8859-1', attachments = True, attachmentdata = False):
         """Fetch bug xml data from server or from cache, if enabled"""
         if self._bug_cache is not None:
             if self._bug_cache.has_key(str(bugid)):
@@ -59,6 +164,10 @@ class BugzillaSession:
         reqdict = {'id': str(bugid).strip(), 'ctype': 'xml'}
         if self._login_dict:
             reqdict.update(self._login_dict)
+        if not attachments:
+            reqdict['excludefield'] = 'attachment'
+        elif not attachmentdata:
+            reqdict['excludefield'] = 'attachmentdata'
         _result = StringIO.StringIO()
         self._curl.setopt(pycurl.URL, os.path.join(self._baseurl, "show_bug.cgi"))
         self._curl.setopt(pycurl.POST, 1)
@@ -104,6 +213,7 @@ class BugzillaSession:
                     'op_sys': 'dont_change',
                     'longdesclength': 'dont_change',
                     'qa_contact': 'dont_change',
+                    'featdev': 'dont_change',
                     'keywords': '',
                     'keywordaction': 'add',
                     'knob': 'none' }
@@ -178,47 +288,12 @@ class BugzillaSession:
 
     def fetch_bug_xml_tree(self, bug):
         """ Return ElementTree parsed tree object """
-        return self.parse_bug_xml(self.fetch_bug_xml(bug))
+        return _parse_bug_xml(self.fetch_bug_xml(bug))
 
     def fetch_buglist_info(self, params):
         """ Return small info about bugs """
-        return self.parse_bug_csv(self.fetch_buglist_csv(params))
+        return _parse_bug_csv(self.fetch_buglist_csv(params))
 
-    def parse_bug_xml(self, bug_xml, convert_unprintable=True):
-        """ 
-            Parses bug xml and returns ElementTree obj
-            If convert_unprintable is True (default), it converts all unprintable
-            characters to '?'. Otherwise tries to parse bug_xml as is.
-        """
-        try:
-            if convert_unprintable:
-                tree = ElementTree.fromstring("".join([sym in string.printable and sym or "?" for sym in bug_xml]))
-            else:
-                tree =  ElementTree.fromstring(bug_xml)
-        except SyntaxError, ex: 
-            raise SyntaxError, "Error parsing bug xml: %s" % ex
-        
-        bug = tree.find("bug")
-        if bug.get('error'):
-            raise KeyError, "Invalid bug: %s" % bug.get('error') 
-        return tree 
-
-    def parse_bug_csv(self, csv_string):
-        """ Parses csv and returns array of dictionaries """
-        reader = csv.reader(csv_string.splitlines())
-        items = []
-        for item in reader:
-            items.append(item)
-        bug_list = []
-        for item in items[1:]:
-            tempo = {}
-            for (col, coln) in enumerate(items[0]):
-                if coln == '':
-                    continue
-                tempo[coln] = item[col]
-            bug_list.append(tempo)
-        return bug_list
-        
     def showbug_url(self, bug):
         """ Returns link to showbug.cgi, with a parameter of bug """
         if type(bug) == types.ListType:
@@ -228,7 +303,7 @@ class BugzillaSession:
 
     def fetch_bug_activity(self, bugid):
         """Fetch bug activity data from server. Returns parsed data"""
-        return self.__parse_bug_activity(self.__get_bug_activity_table(bugid))
+        return _parse_bug_activity(self.__get_bug_activity_table(bugid))
 
     def __get_bug_activity_table(self, bugid):
         """Raw function to get bug activity table"""
@@ -255,45 +330,4 @@ class BugzillaSession:
             # We also don't want to have references
             result = re.subn(r'(?sm)<a href=".+">(.+)</a>', r'\1', result)[0]
             return result
-
-    def __parse_bug_activity(self, ba_string):
-        """Parses activities from bugzilla bug activity html page"""
-        if not ba_string.startswith("<table"):
-            # We don't know  how to deal with unknown data
-            return None
-        try:
-            tree =  ElementTree.fromstring(ba_string)
-        except SyntaxError, ex: 
-            raise SyntaxError, "Error parsing bug activity: %s" % ex
-        activity = []
-        trs = tree.findall("tr")
-        if len(trs) < 2:
-            # Strange input. 
-            return []
-        if trs[0][0].text == "Who":
-            # First row is a table header. Skip it
-            trs = trs[1:]
-        for trw in trs:
-            if len(trw) == 5:
-                actdict = {
-                    'who':     trw[0].text.strip(),
-                    'when':    trw[1].text.strip(),
-                    'what':    trw[2].text.strip(),
-                    'removed': trw[3].text.strip(),
-                    'added':   trw[4].text.strip()
-                    }
-                activity.append(actdict)
-            elif len(trw) == 3:
-                # line continues for previos action
-                actdict = {
-                    'who':     activity[-1]['who'],
-                    'when':    activity[-1]['when'],
-                    'what':    trw[0].text.strip(),
-                    'removed': trw[1].text.strip(),
-                    'added':   trw[2].text.strip()
-                    }
-                activity.append(actdict)
-            else:
-                raise SyntaxError, "Error parsing bug activity. Unknown dataline len: %d" % len(trw)
-        return activity       
 
