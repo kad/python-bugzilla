@@ -33,12 +33,16 @@ __all__ = ( 'BugzillaSession', )
 import pycurl
 import urllib
 import StringIO
-import cElementTree as ElementTree
 import os
 import csv
 import types
 import re
 
+try:
+    # cElementTree in python 2.5
+    import xml.etree.cElementTree as ElementTree
+except ImportError:
+    import cElementTree as ElementTree
 
 def _parse_bug_csv(csv_string):
     """ Parses csv and returns array of dictionaries """
@@ -156,9 +160,9 @@ class BugzillaSession:
         """Enables proxy support"""
         self._curl.setopt(pycurl.PROXY, proxy_url)
 
-    def fetch_bug_xml(self, bugid, xml_def_encoding = 'iso-8859-1', attachments = True, attachmentdata = False):
+    def fetch_bug_xml(self, bugid, xml_def_encoding = 'iso-8859-1', attachments = True, attachmentdata = False, asunicode = False):
         """Fetch bug xml data from server or from cache, if enabled"""
-        if self._bug_cache is not None:
+        if not asunicode and self._bug_cache is not None:
             if self._bug_cache.has_key(str(bugid)):
                 return self._bug_cache[str(bugid)]
         reqdict = {'id': str(bugid).strip(), 'ctype': 'xml'}
@@ -181,10 +185,17 @@ class BugzillaSession:
             result = _result.getvalue()
             if result.find(' encoding="', 0, 100) < 0:
                 # Hack for broken bugzilla xml output
-                result = result.replace('<?xml version="1.0" standalone="yes"?>', \
-                                '<?xml version="1.0" encoding="%s" standalone="yes"?>' % xml_def_encoding)
+                result = result.replace('<?xml version="1.0" standalone="yes"', \
+                                '<?xml version="1.0" encoding="%s" standalone="yes"' % xml_def_encoding)
+
             if self._bug_cache is not None:
                 self._bug_cache[str(bugid)] = result
+
+            if asunicode:
+                match = re.search(r'<?xml.+\sencoding="(?P<enc>[a-zA-Z0-9:._-]+?)".+?>', result)
+                if match:
+                    result = result.replace(' encoding="%s"' % match.group('enc'), "", 1)
+                result = unicode(result, match.group('enc'))
             return result
 
     def comment_bugs(self, bugs, comment):

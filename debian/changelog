@@ -1,3 +1,10 @@
+python-bugzilla (0.10) unstable; urgency=low
+
+  * fetch_bug_xml() now can return unicode string, if asunicode parameter is True
+  * fix cElementTree import for python 2.5 
+
+ -- Alexander D. Kanevskiy <packages@bifh.org>  Fri,  8 Aug 2008 18:56:58 +0300
+
 python-bugzilla (0.9) unstable; urgency=low
 
   * Bugzilla 3.0.x: Don't fetch attachment data by default in fetch_bug_xml
@@ -26,7 +33,7 @@ python-bugzilla (0.6) unstable; urgency=low
   * parse_bug_xml() now converts unprintable characters to '?' by default
   * minor pylint warnings cleanup
 
- -- Alexander Kanevskiy <packages@bifh.org>  Thu, 14 Dec 2006 16:42:23 +0200
+ -- Alexander D. Kanevskiy <packages@bifh.org>  Thu, 14 Dec 2006 16:42:23 +0200
 
 python-bugzilla (0.5) unstable; urgency=low
 
