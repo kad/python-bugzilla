@@ -242,7 +242,7 @@ class BugzillaSession:
         if isinstance(bugs, (types.ListType, types.TupleType)):
             # List of bugs
             lbugs = bugs
-        elif isinstance(bugs, types.StringType):
+        elif isinstance(bugs, basestring):
             # String ? Hmm, assume as list of bugs separated by ','
             lbugs = re.split("\s*,\s*", bugs)
         elif isinstance(params, types.IntType):
@@ -291,7 +291,7 @@ class BugzillaSession:
         if isinstance(params, (types.ListType, types.TupleType)):
             # List of bugs
             reqdict['bug_id'] = ",".join([str(bug) for bug in params])
-        elif isinstance(params, types.StringType):
+        elif isinstance(params, basestring):
             # String ? Hmm, assume as list of bugs separated by ','
             reqdict['bug_id'] = params
         elif isinstance(params, types.IntType):

@@ -1,9 +1,15 @@
+python-bugzilla (0.11) unstable; urgency=low
+
+  * string arguments could be also unicode
+
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Tue, 12 Aug 2008 12:40:37 +0300
+
 python-bugzilla (0.10) unstable; urgency=low
 
   * fetch_bug_xml() now can return unicode string, if asunicode parameter is True
   * fix cElementTree import for python 2.5 
 
- -- Alexander D. Kanevskiy <packages@bifh.org>  Fri,  8 Aug 2008 18:56:58 +0300
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Fri,  8 Aug 2008 18:56:58 +0300
 
 python-bugzilla (0.9) unstable; urgency=low
 
@@ -33,8 +39,8 @@ python-bugzilla (0.6) unstable; urgency=low
   * parse_bug_xml() now converts unprintable characters to '?' by default
   * minor pylint warnings cleanup
 
- -- Alexander D. Kanevskiy <packages@bifh.org>  Thu, 14 Dec 2006 16:42:23 +0200
-
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Thu, 14 Dec 2006 16:42:23 +0200
+ 
 python-bugzilla (0.5) unstable; urgency=low
 
   * New functionality: fetch_bug_activity()
