@@ -1,3 +1,9 @@
+python-bugzilla (0.12) unstable; urgency=low
+
+  * fetch_buglist_* now unicode safe and has a parameter "asunicode"
+
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Thu, 14 Aug 2008 16:56:36 +0300
+
 python-bugzilla (0.11) unstable; urgency=low
 
   * string arguments could be also unicode

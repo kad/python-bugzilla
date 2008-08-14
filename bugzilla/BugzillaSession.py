@@ -44,11 +44,22 @@ try:
 except ImportError:
     import cElementTree as ElementTree
 
+def __unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
+    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
+    csv_reader = csv.reader(__utf_8_encoder(unicode_csv_data),
+                            dialect=dialect, **kwargs)
+    for row in csv_reader:
+        # decode UTF-8 back to Unicode, cell by cell:
+        yield [unicode(cell, 'utf-8') for cell in row]
+
+def __utf_8_encoder(unicode_csv_data):
+    for line in unicode_csv_data:
+        yield line.encode('utf-8')
+
 def _parse_bug_csv(csv_string):
     """ Parses csv and returns array of dictionaries """
-    reader = csv.reader(csv_string.splitlines())
     items = []
-    for item in reader:
+    for item in __unicode_csv_reader(csv_string.splitlines()):
         items.append(item)
     bug_list = []
     for item in items[1:]:
@@ -160,7 +171,7 @@ class BugzillaSession:
         """Enables proxy support"""
         self._curl.setopt(pycurl.PROXY, proxy_url)
 
-    def fetch_bug_xml(self, bugid, xml_def_encoding = 'iso-8859-1', attachments = True, attachmentdata = False, asunicode = False):
+    def fetch_bug_xml(self, bugid, xml_def_encoding = 'iso-8859-15', attachments = True, attachmentdata = False, asunicode = False):
         """Fetch bug xml data from server or from cache, if enabled"""
         if not asunicode and self._bug_cache is not None:
             if self._bug_cache.has_key(str(bugid)):
@@ -274,7 +285,7 @@ class BugzillaSession:
         else:
             raise KeyError, "Cache not enabled"
 
-    def fetch_buglist_csv(self, params):
+    def fetch_buglist_csv(self, params, asunicode = False, default_charset = 'iso8859-15' ):
         """ 
             Fetches csv from buglist.cgi.
                 Possible parameters:
@@ -311,7 +322,10 @@ class BugzillaSession:
         #print self._curl.getinfo(pycurl.HTTP_CODE), self._curl.getinfo(pycurl.EFFECTIVE_URL)
         #print self._result.getvalue()
         if self._curl.getinfo(pycurl.HTTP_CODE) == 200:
-            return _result.getvalue()
+            if asunicode:
+                return unicode(_result.getvalue(), default_charset)
+            else:
+                return _result.getvalue()
         else:
             return ""
 
@@ -319,9 +333,9 @@ class BugzillaSession:
         """ Return ElementTree parsed tree object """
         return _parse_bug_xml(self.fetch_bug_xml(bug))
 
-    def fetch_buglist_info(self, params):
+    def fetch_buglist_info(self, params, asunicode = False, default_charset = 'iso8859-15'):
         """ Return small info about bugs """
-        return _parse_bug_csv(self.fetch_buglist_csv(params))
+        return _parse_bug_csv(self.fetch_buglist_csv(params, asunicode, default_charset))
 
     def showbug_url(self, bug):
         """ Returns link to showbug.cgi, with a parameter of bug """
