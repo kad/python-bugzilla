@@ -363,7 +363,7 @@ class BugzillaSession:
             return ""
         else:
             result = _result.getvalue()
-            match = re.search(r"(?P<act><table.+</table>)", result, re.M+re.DOTALL)
+            match = re.search(r"(?P<act><table( border)? cellpadding=.+</table>)", result, re.M+re.DOTALL)
             if not match:
                 return ""
             result = match.group("act")

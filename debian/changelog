@@ -1,3 +1,9 @@
+python-bugzilla (0.13) unstable; urgency=low
+
+  * Fixed fetch_bug_activity() to work with Bugzilla 3.x
+
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Thu, 25 Sep 2008 15:56:13 +0300
+
 python-bugzilla (0.12) unstable; urgency=low
 
   * fetch_buglist_* now unicode safe and has a parameter "asunicode"
