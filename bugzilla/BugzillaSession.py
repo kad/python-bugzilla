@@ -146,6 +146,7 @@ class BugzillaSession:
         self._curl = pycurl.Curl()
         self._curl.setopt(pycurl.VERBOSE, False)
         self._curl.setopt(pycurl.SSL_VERIFYPEER, False)
+        self._curl.setopt(pycurl.FOLLOWLOCATION, 1)
         self._name = None
         self._password = None
         self._login_dict = None
