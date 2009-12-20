@@ -27,7 +27,6 @@
 """BugzillaSession - Class for access Bugzilla over the network. 
 It uses GET/POST interfaces compatible with older Bugzilla 2.x, which doesn't have XML-RPC."""
 
-__revision__ = "r"+"$Revision$"[11:-2]
 __all__ = ( 'BugzillaSession', ) 
 
 import pycurl
@@ -54,7 +53,11 @@ def __unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
 
 def __utf_8_encoder(unicode_csv_data):
     for line in unicode_csv_data:
-        yield line.encode('utf-8')
+        try:
+            yield line.encode('utf-8')
+        except UnicodeDecodeError:
+            # XXX: ugly hack for now
+            pass
 
 def _parse_bug_csv(csv_string):
     """ Parses csv and returns array of dictionaries """
