@@ -117,8 +117,8 @@ def _parse_bug_activity(ba_string):
                 'who':     trw[0].text.strip(),
                 'when':    trw[1].text.strip(),
                 'what':    trw[2].text.strip(),
-                'removed': trw[3].text.strip(),
-                'added':   trw[4].text.strip()
+                'removed': _get_text_from_xml(trw[3]),
+                'added':   _get_text_from_xml(trw[4])
                 }
             activity.append(actdict)
         elif len(trw) == 3:
@@ -127,13 +127,25 @@ def _parse_bug_activity(ba_string):
                 'who':     activity[-1]['who'],
                 'when':    activity[-1]['when'],
                 'what':    trw[0].text.strip(),
-                'removed': trw[1].text.strip(),
-                'added':   trw[2].text.strip()
+                'removed': _get_text_from_xml(trw[1]),
+                'added':   _get_text_from_xml(trw[2])
                 }
             activity.append(actdict)
         else:
             raise SyntaxError, "Error parsing bug activity. Unknown dataline len: %d" % len(trw)
     return activity       
+
+
+def _get_text_from_xml(elem, addtail = False):
+    """ Helper to get inner text for tree of XML elements """
+    result = []
+    if elem.text is not None:
+        result.append(elem.text.strip())
+    for ielem in elem:
+        result.append(_get_text_from_xml(ielem, True))
+    if addtail and elem.tail is not None:
+        result.append(elem.tail.strip())
+    return " ".join(result).strip()
 
 
 class BugzillaSession:
