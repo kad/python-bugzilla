@@ -288,6 +288,15 @@ class BugzillaSession:
             return _result.getvalue()
         if self._curl.getinfo(pycurl.HTTP_CODE) != 200:
             return _result.getvalue()
+        if 'token' not in reqdict:
+            # for Bugzilla >= 3.4
+            mtok = re.search(r'type="hidden"\s+name="token"\s+value="(?P<token>\w+)"', _result.getvalue(), re.M)
+            if mtok:
+                reqdict['token'] = mtok.group('token')
+                return self.update_bugs(bugs, reqdict)
+            else:
+                # KAD: is this right in that scenario ?
+                return ""
         else:
             return ""
 
