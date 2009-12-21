@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: bugzilla
-Version: 0.13
+Version: 0.14
 Summary: Access to Bugzilla
 Home-page: http://bifh.org/wiki/python-bugzilla
 Author: Alexandr D. Kanevskiy

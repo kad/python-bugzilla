@@ -1,3 +1,11 @@
+python-bugzilla (0.14) unstable; urgency=low
+
+  * Fixes for malformed UTF-8 in CSV
+  * Fixes for parsing bug activity
+  * token hack for Bugzilla 3.4+
+
+ -- Alexandr D. Kanevskiy <packages@bifh.org>  Mon, 21 Dec 2009 17:08:30 +0200
+
 python-bugzilla (0.13) unstable; urgency=low
 
   * Fixed fetch_bug_activity() to work with Bugzilla 3.x
