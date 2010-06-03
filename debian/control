@@ -8,6 +8,6 @@ XS-Python-Version: >= 2.3
 
 Package: python-bugzilla
 Architecture: all
-Depends: ${python:Depends}, python-celementtree, python-pycurl | python2.3-pycurl
+Depends: ${python:Depends}, python(>=2.5) | python-celementtree, python-pycurl | python2.3-pycurl
 XB-Python-Version: ${python:Versions}
 Description: Small python library of classes, for access Bugzilla
