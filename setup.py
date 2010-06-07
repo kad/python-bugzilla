@@ -10,7 +10,7 @@ except ImportError:
     from distutils.core import setup
 
 
-version = "0.14"
+version = "0.15"
 
 setup (name = "bugzilla",
     description = "Access to Bugzilla",

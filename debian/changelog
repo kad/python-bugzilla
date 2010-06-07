@@ -1,3 +1,9 @@
+python-bugzilla (0.15) unstable; urgency=low
+
+  * Make package compatible with python 2.5+
+
+ -- Alexander Kanevskiy <alexander.kanevskiy@nokia.com>  Mon, 07 Jun 2010 12:23:07 +0300
+
 python-bugzilla (0.14) unstable; urgency=low
 
   * Fixes for malformed UTF-8 in CSV
